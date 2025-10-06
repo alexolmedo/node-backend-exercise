@@ -1,23 +1,31 @@
 {
-  "name": "backend-exercise",
+  "name": "tasks-api",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Tasks REST API built with Node.js and Fastify",
+  "main": "dist/server.js",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "docker:build": "docker build -t tasks-api .",
+    "docker:run": "docker run -p 3000:3000 tasks-api",
+    "docker:compose": "docker-compose up -d"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alexolmedo/node-backend-exercise.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Alexander Olmedo",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/alexolmedo/node-backend-exercise/issues"
   },
