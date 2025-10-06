@@ -1,5 +1,7 @@
 import Fastify, {FastifyInstance, FastifyServerOptions} from 'fastify';
 import cors from '@fastify/cors';
+import taskRoutes from './routes/tasks';
+import {AppError} from './utils/errors';
 
 export async function build(opts: FastifyServerOptions = {}): Promise<FastifyInstance> {
   const app = Fastify(opts);
@@ -12,17 +14,59 @@ export async function build(opts: FastifyServerOptions = {}): Promise<FastifyIns
     return {status: 'ok', timestamp: new Date().toISOString()};
   });
 
-  // Register routes
-  // await app.register(taskRoutes, { prefix: '/tasks' });
+  // Register task routes
+  await app.register(taskRoutes, {prefix: '/tasks'});
+
+  // Not found handler
+  app.setNotFoundHandler((request, reply) => {
+    reply.status(404).send({
+      error: {
+        statusCode: 404,
+        message: `Route ${request.method}:${request.url} not found`
+      }
+    });
+  });
 
   // Global error handler
   app.setErrorHandler((error, request, reply) => {
-    request.log.error(error);
+    // Log error
+    request.log.error({
+      err: error,
+      url: request.url,
+      method: request.method
+    }, 'Request error');
 
-    reply.status(error.statusCode || 500).send({
+    // Handle custom AppError
+    if (error instanceof AppError) {
+      return reply.status(error.statusCode).send({
+        error: {
+          statusCode: error.statusCode,
+          message: error.message
+        }
+      });
+    }
+
+    // Handle Fastify validation errors
+    if (error.validation) {
+      return reply.status(400).send({
+        error: {
+          statusCode: 400,
+          message: 'Validation error',
+          details: error.validation
+        }
+      });
+    }
+
+    // Handle generic errors
+    const statusCode = error.statusCode || 500;
+    const message = statusCode === 500
+        ? 'Internal Server Error'
+        : error.message;
+
+    return reply.status(statusCode).send({
       error: {
-        message: error.message || 'Internal Server Error',
-        statusCode: error.statusCode || 500
+        statusCode,
+        message
       }
     });
   });
